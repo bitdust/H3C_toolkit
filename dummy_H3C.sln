@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dummy_H3C", "dummy_H3C\dummy_H3C.vcxproj", "{5F3F9FBA-5938-47BA-A687-C573E1336CDF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5F3F9FBA-5938-47BA-A687-C573E1336CDF}.Debug|Win32.ActiveCfg = Debug|Win32
+		{5F3F9FBA-5938-47BA-A687-C573E1336CDF}.Debug|Win32.Build.0 = Debug|Win32
+		{5F3F9FBA-5938-47BA-A687-C573E1336CDF}.Release|Win32.ActiveCfg = Release|Win32
+		{5F3F9FBA-5938-47BA-A687-C573E1336CDF}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
