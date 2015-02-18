@@ -3,7 +3,7 @@
 #include "pcap.h"
 #include <windows.h>
 
-// from njit8021xclient project
+//code from njit8021xclient project
 #define START 1
 #define REQUEST 1
 #define RESPONSE 2
@@ -28,6 +28,10 @@ void RecvStart(pcap_t *handle,const UINT8 MAC[6]);
 void RecvResponse(pcap_t *handle,const UINT8 MAC[6]); 
 void RecvResponseMD5(pcap_t *handle,const UINT8 MAC[6]); 
 
+// from crc32.c
+extern int crc32_test();
+extern unsigned int Reverse_Table_CRC(unsigned int *data, unsigned int len);
+
 int main()
 {
 	char *UserName = NULL;
@@ -38,6 +42,7 @@ int main()
 	pcap_if_t *alldevs;
 	pcap_if_t *dev;
 	char key;
+
 	if (pcap_findalldevs(&alldevs,errbuf) == -1)
 	{
 		fprintf(stderr,"Error in pcap_findalldevs: %s\n",errbuf);
@@ -56,7 +61,7 @@ int main()
 	}
 	pcap_freealldevs(alldevs);
 	loop(DeviceName);
-	return 1;
+	return 0;
 }
 
 int loop(const  char *DeviceName)
@@ -68,12 +73,15 @@ int loop(const  char *DeviceName)
 	char	errbuf[PCAP_ERRBUF_SIZE];
 	pcap_t	*handle; // adapter handle
 	UINT8	MAC[6]={0x0c,0xda,0x41,0x97,0xd9,0x10};
-	char	FilterStr[100];
+	char	FilterStr[200];
 	//char	infobuf[100];
 	char serverIsFound = 0;
 	FILE	*fpinfo = NULL;
 	struct bpf_program	fcode;
 	const int DefaultTimeout = 500;			//60000;//设置接收超时参数，单位ms	
+
+
+
 	/** 打开网卡 **/
 	handle = pcap_open_live(DeviceName,65536,1,DefaultTimeout,errbuf);
 	if (handle == NULL) {
@@ -102,13 +110,14 @@ int loop(const  char *DeviceName)
 	ethhdr[12] = 0x88;
 	ethhdr[13] = 0x8e;
 	SendRequestIdentity(handle,ethhdr);
-	return 1;
+	return 0;
 }
 
 void SendRequestIdentity(pcap_t *handle,const UINT8 ethhdr[])
 {
 	UINT8 packet[77];
-	memset(packet,0,sizeof(UINT8)*77);
+	unsigned int fcs; 
+	memset(packet,0,sizeof(packet));
 	memcpy(packet,ethhdr,14);
 	packet[14] = 0x01; // 802.1x version 1
 	packet[15] = 0x00; // EAP Packet
@@ -121,5 +130,7 @@ void SendRequestIdentity(pcap_t *handle,const UINT8 ethhdr[])
 	packet[20] = 0x00;
 	packet[21] = 0x05;
 	packet[22] = 1; // Type:Identity
+	fcs = Reverse_Table_CRC(&packet,sizeof(packet)-4);
+	memcpy(&packet[sizeof(packet)-4],&fcs,sizeof(fcs)); // fill the FCS field
 	pcap_sendpacket(handle, packet, sizeof(packet)); //错误的FCS
 }
