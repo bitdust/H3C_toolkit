@@ -21,12 +21,12 @@ const UINT8 MultcastAddr[6]	= {0x01,0x80,0xc2,0x00,0x00,0x03}; // 多播MAC地址
 
 int loop(const  char *DeviceName); 
 void SendRequestIdentity(pcap_t *handle,const UINT8 ethhdr[]); 
-void SendRequestMD5(pcap_t *handle,const UINT8 MAC[6]); 
-void SendSuccess(pcap_t *handle,const UINT8 MAC[6]); 
-void SendH3C(pcap_t *handle,const UINT8 MAC[6]); 
-void RecvStart(pcap_t *handle,const UINT8 MAC[6]); 
-void RecvResponse(pcap_t *handle,const UINT8 MAC[6]); 
-void RecvResponseMD5(pcap_t *handle,const UINT8 MAC[6]); 
+void SendRequestMD5(pcap_t *handle,const UINT8 ethhdr[]); 
+void SendSuccess(pcap_t *handle,const UINT8 ethhdr[]); 
+void SendH3C(pcap_t *handle,const UINT8 ethhdr[]); 
+//void RecvStart(pcap_t *handle); 
+void RecvResponse(pcap_t *handle); 
+//void RecvResponseMD5(pcap_t *handle); 
 
 // from crc32.c
 extern int crc32_test();
@@ -75,7 +75,7 @@ int loop(const  char *DeviceName)
 	UINT8	MAC[6]={0x0c,0xda,0x41,0x97,0xd9,0x10};
 	char	FilterStr[200];
 	//char	infobuf[100];
-	char serverIsFound = 0;
+	char clientIsFound = 0;
 	FILE	*fpinfo = NULL;
 	struct bpf_program	fcode;
 	const int DefaultTimeout = 500;			//60000;//设置接收超时参数，单位ms	
@@ -93,23 +93,29 @@ int loop(const  char *DeviceName)
 	pcap_compile(handle, &fcode, FilterStr, 1, 0xff);
 	pcap_setfilter(handle, &fcode);
 	/** 等待客户端发起接入 **/
-	while (!serverIsFound)
+	while (!clientIsFound)
 	{
 		retcode = pcap_next_ex(handle, &header, &captured);
 		if (retcode==1 && /*(EAP_Code)*/captured[15]==START)
-			serverIsFound = 1;
+			clientIsFound = 1;
 		else
 		{	
 			printf(".");
 		}
 	}
-	printf("client connected.");
+	printf("\nclient connected.\n");
 
 	memcpy(ethhdr+0,captured+6,6);
 	memcpy(ethhdr+6,MAC,6);
 	ethhdr[12] = 0x88;
 	ethhdr[13] = 0x8e;
 	SendRequestIdentity(handle,ethhdr);
+	RecvResponse(handle);
+	SendRequestMD5(handle,ethhdr);
+	RecvResponse(handle);
+	SendSuccess(handle,ethhdr);
+	Sleep(3000);
+	SendH3C(handle,ethhdr);
 	return 0;
 }
 
@@ -130,7 +136,99 @@ void SendRequestIdentity(pcap_t *handle,const UINT8 ethhdr[])
 	packet[20] = 0x00;
 	packet[21] = 0x05;
 	packet[22] = 1; // Type:Identity
-	fcs = Reverse_Table_CRC(&packet,sizeof(packet)-4);
+	fcs = Reverse_Table_CRC((unsigned int *)&packet,sizeof(packet)-4);
 	memcpy(&packet[sizeof(packet)-4],&fcs,sizeof(fcs)); // fill the FCS field
-	pcap_sendpacket(handle, packet, sizeof(packet)); //错误的FCS
+	pcap_sendpacket(handle, packet, sizeof(packet));
+}
+
+void RecvResponse(pcap_t *handle)
+{
+	int retcode;
+	struct pcap_pkthdr *header = NULL;
+	UINT8	*captured = NULL;
+	int responseIsReceived = 0;
+	printf("waiting for EAP response.\n");
+	while (!responseIsReceived)
+	{
+		retcode = pcap_next_ex(handle, &header, &captured);
+		if (retcode==1 && /*(EAP_Code)*/captured[15]== 0 &&captured[12]==0x88 &&captured[13] == 0x8e && captured[18] == RESPONSE)
+			responseIsReceived = 1;
+		else
+		{	
+			printf(".");
+		}
+	}
+	printf("\nEAP response received.\n");
+}
+
+void SendRequestMD5(pcap_t *handle,const UINT8 ethhdr[])
+{
+	UINT8 packet[64];
+	unsigned int fcs; 
+	memset(packet,0,sizeof(packet));
+	memcpy(packet,ethhdr,14);
+	packet[14] = 0x01; // 802.1x version 1
+	packet[15] = 0x00; // EAP Packet
+	/** 16~17 为802.1x长度 **/
+	packet[16] = 0x00;
+	packet[17] = 0x16;
+	packet[18] = REQUEST;
+	packet[19] = 2; // Id
+	/** 20~21 为EAP包长度 **/
+	packet[20] = 0x00;
+	packet[21] = 0x16;
+	packet[22] = MD5; // Type:EAP-MD5-CHALLENGE
+	packet[23] = 16;// eap.md5.value_size
+	/** 24~40 为MD5码值，暂为全零 **/
+	fcs = Reverse_Table_CRC((unsigned int *)&packet,sizeof(packet)-4);
+	memcpy(&packet[sizeof(packet)-4],&fcs,sizeof(fcs)); // fill the FCS field
+	pcap_sendpacket(handle, packet, sizeof(packet));
+}
+
+void SendSuccess(pcap_t *handle,const UINT8 ethhdr[])
+{
+	UINT8 packet[64];
+	unsigned int fcs; 
+	memset(packet,0,sizeof(packet));
+	memcpy(packet,ethhdr,14);
+	packet[14] = 0x01; // 802.1x version 1
+	packet[15] = 0x00; // EAP Packet
+	/** 16~17 为802.1x长度 **/
+	packet[16] = 0x00;
+	packet[17] = 0x04;
+	packet[18] = 0x03; //SUCCESS
+	packet[19] = 2; // Id
+	/** 20~21 为EAP包长度 **/
+	packet[20] = 0x00;
+	packet[21] = 0x04;
+	fcs = Reverse_Table_CRC((unsigned int *)&packet,sizeof(packet)-4);
+	memcpy(&packet[sizeof(packet)-4],&fcs,sizeof(fcs)); // fill the FCS field
+	pcap_sendpacket(handle, packet, sizeof(packet));
+}
+
+void SendH3C(pcap_t *handle,const UINT8 ethhdr[])
+{
+	UINT8 packet[77];
+	unsigned int fcs; 
+	memset(packet,0,sizeof(packet));
+	memcpy(packet,ethhdr,14);
+	packet[14] = 0x01; // 802.1x version 1
+	packet[15] = 0x00; // EAP Packet
+	/** 16~17 为802.1x长度 **/
+	packet[16] = 0x00;
+	packet[17] = 0x37;
+	packet[18] = 0x0a; //H3C code
+	packet[19] = 3; // Id
+	/** 20~21 为EAP包长度 **/
+	packet[20] = 0x00;
+	packet[21] = 0x37;
+	packet[22] = 0x19;
+	packet[23] = 0x2b;
+	packet[24] = 0x44;
+	packet[25] = 0x2b;
+	packet[26] = 0x35;
+	/** 之后为全零 **/
+	fcs = Reverse_Table_CRC((unsigned int *)&packet,sizeof(packet)-4);
+	memcpy(&packet[sizeof(packet)-4],&fcs,sizeof(fcs)); // fill the FCS field
+	pcap_sendpacket(handle, packet, sizeof(packet));
 }
