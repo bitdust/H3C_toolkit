@@ -1,6 +1,9 @@
 #define _CRT_SECURE_NO_WARNINGS //不在提示关于 strcpy() memcpy() 等函数的警告
 
 #include "pcap.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <conio.h>
 #include <windows.h>
 
 //code from njit8021xclient project
@@ -114,8 +117,15 @@ int loop(const  char *DeviceName)
 	SendRequestMD5(handle,ethhdr);
 	RecvResponse(handle);
 	SendSuccess(handle,ethhdr);
-	Sleep(3000);
+	//Sleep(3000);
+	printf("\npress any key to send H3C information.\n");
+	getch();
 	SendH3C(handle,ethhdr);
+	printf("\npress any key to send request identity.\n");
+	getch();
+	SendRequestIdentity(handle,ethhdr);
+	printf("\npress any key to exit.\n");
+	getch();
 	return 0;
 }
 
