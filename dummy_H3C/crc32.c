@@ -2,10 +2,6 @@
 #include <stdlib.h>
 #include <io.h>
 
-
-
-
-
 #define alt_8    char
 #define alt_u8   unsigned char
 #define alt_32   int
