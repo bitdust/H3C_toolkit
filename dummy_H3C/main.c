@@ -112,18 +112,32 @@ int loop(const  char *DeviceName)
 	memcpy(ethhdr+6,MAC,6);
 	ethhdr[12] = 0x88;
 	ethhdr[13] = 0x8e;
+
+	// 发送请求
 	SendRequestIdentity(handle,ethhdr);
+
+	// 接收回复
 	RecvResponse(handle);
+
+	// 发送MD5请求
 	SendRequestMD5(handle,ethhdr);
+
+	// 接收回复
 	RecvResponse(handle);
+
+	// 发送认证成功消息
 	SendSuccess(handle,ethhdr);
+
 	//Sleep(3000);
 	printf("\npress any key to send H3C information.\n");
 	getch();
+	// 发送H3C定制的消息
 	SendH3C(handle,ethhdr);
+
 	printf("\npress any key to send request identity.\n");
 	while (getch()==' ')
 	{
+		// 发送请求
 		SendRequestIdentity(handle, ethhdr);
 		printf("\npress space key to send request identity.\npress q to exit");
 	}
@@ -219,6 +233,7 @@ void SendSuccess(pcap_t *handle,const UINT8 ethhdr[])
 	pcap_sendpacket(handle, packet, sizeof(packet));
 }
 
+// 发送类型为0x0A的802.1x信息
 void SendH3C(pcap_t *handle,const UINT8 ethhdr[])
 {
 	//UINT8 aes_data[32] = { 0x16, 0x4c, 0x81, 0xf2, 0xcb, 0x49, 0x21, 0x2e, 0x68, 0x34, 0xfb, 0xdd, 0xbe, 0xe8, 0x5a, 0xf3, 0xd6, 0x81, 0xf4, 0x43, 0x36, 0x09, 0xc1, 0x62, 0xb1, 0x52, 0x57, 0x99, 0xe3, 0x45, 0x80, 0xc7 };
