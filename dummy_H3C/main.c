@@ -17,7 +17,7 @@
 #define IDENTITY 1
 #define NOTIFICATION 2
 #define MD5 4
-#define AVAILABLE 20 u
+#define AVAILABLE 20
 typedef UINT8 EAP_ID;
 const UINT8 BroadcastAddr[6]	= {0xff,0xff,0xff,0xff,0xff,0xff}; // 广播MAC地址
 const UINT8 MultcastAddr[6]	= {0x01,0x80,0xc2,0x00,0x00,0x03}; // 多播MAC地址
@@ -95,7 +95,9 @@ int loop(const  char *DeviceName)
 	sprintf(FilterStr,"(ether dst host 0c:da:41:97:d9:10 ) or (ether dst host %02x:%02x:%02x:%02x:%02x:%02x) or (ether dst host %02x:%02x:%02x:%02x:%02x:%02x)",BroadcastAddr[0],BroadcastAddr[1],BroadcastAddr[2],BroadcastAddr[3],BroadcastAddr[4],BroadcastAddr[5],MultcastAddr[0],MultcastAddr[1],MultcastAddr[2],MultcastAddr[3],MultcastAddr[4],MultcastAddr[5]);
 	pcap_compile(handle, &fcode, FilterStr, 1, 0xff);
 	pcap_setfilter(handle, &fcode);
+	
 	/** 等待客户端发起接入 **/
+	printf("\nWaiting for client\n");
 	while (!clientIsFound)
 	{
 		retcode = pcap_next_ex(handle, &header, &captured);
@@ -128,21 +130,19 @@ int loop(const  char *DeviceName)
 	// 发送认证成功消息
 	SendSuccess(handle,ethhdr);
 
-	//Sleep(3000);
-	printf("\npress any key to send H3C information.\n");
-	getch();
 	// 发送H3C定制的消息
+	printf("press Enter to send H3C information.\n");
+	getchar();
+	getchar();
 	SendH3C(handle,ethhdr);
 
-	printf("\npress any key to send request identity.\n");
-	while (getch()==' ')
-	{
-		// 发送请求
-		SendRequestIdentity(handle, ethhdr);
-		printf("\npress space key to send request identity.\npress q to exit");
-	}
-	printf("\npress any key to exit.\n");
-	getch();
+	// 发送请求
+	printf("press Enter to send request identity.\n");
+	getchar();
+	SendRequestIdentity(handle, ethhdr);
+
+	printf("press Enter to exit.\n");
+	getchar();
 	return 0;
 }
 
