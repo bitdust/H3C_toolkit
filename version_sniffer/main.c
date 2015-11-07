@@ -89,7 +89,7 @@ int main()
 		retcode = pcap_next_ex(handle, &header, &captured);
 		if (retcode == 1 && captured[12] == 0x88 && captured[13] == 0x8e &&/*(EAP_Code)*/captured[15] == 0x00 && captured[18] == RESPONSE)
 			// 搜索特征是以0x06,0x07为开头的，存放base64信息的串
-			for (int ii = 00; ii < header->len - 1; ii++)
+			for (unsigned int ii = 00; ii < header->len - 1; ii++)
 				if (*(captured + ii) == 0x06 && *(captured + ii + 1) == 0x07)
 				{
 					memcpy(base64, captured + ii + 2, 28);
@@ -116,12 +116,12 @@ int main()
 	printf("\n\n====使用密钥 HuaWei3COM1X 解码====\n");
 	printf("版本号为: %s\n", version_data);
 	printf("\n16进制表示为: ");
-	for (int i = 0; i < strnlen(version_data, 20); i++)
+	for (unsigned int i = 0; i < strnlen(version_data, 20); i++)
 	{
 		printf("%02hhx", version_data[i]);
 	}
 	printf("\n\nC语言数据格式:\nconst char H3C_VERSION[16]=\n{");
-	for (int i = 0; i < strnlen(version_data, 20) - 1; i++)
+	for (unsigned int i = 0; i < strnlen(version_data, 20) - 1; i++)
 	{
 		printf("0x%02hhx,", version_data[i]);
 	}
@@ -136,12 +136,12 @@ int main()
 	printf("\n\n====使用密钥 Oly5D62FaE94W7 解码====\n");
 	printf("版本号为: %s\n", version_data);
 	printf("\n16进制表示为: ");
-	for (int i = 0; i < strnlen(version_data,20); i++)
+	for (unsigned int i = 0; i < strnlen(version_data, 20); i++)
 	{
 		printf("%02hhx", version_data[i]);
 	}
 	printf("\n\nC语言数据格式:\nconst char H3C_VERSION[16]=\n{");
-	for (int i = 0; i < strnlen(version_data, 20) - 1; i++)
+	for (unsigned int i = 0; i < strnlen(version_data, 20) - 1; i++)
 	{
 		printf("0x%02hhx,", version_data[i]);
 	}
