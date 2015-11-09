@@ -50,7 +50,8 @@ int main()
 	{
 		fprintf(stderr,"Error in pcap_findalldevs: %s\n",errbuf);
 	}
-	printf("Select an adapter by input Y\n");
+	printf("输入 Y 选择网卡，按下 Enter 显示下一网卡\n");
+	printf("使用说明见：https://github.com/bitdust/H3C_toolkit \n\n");
 	for (dev = alldevs; dev != NULL; dev = dev->next)
 	{
 		printf("%s (%s)\n", dev->name, dev->description);
