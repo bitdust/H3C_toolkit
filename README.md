@@ -1,4 +1,6 @@
 # H3C_toolkit
+![license](https://img.shields.io/github/license/bitdust/H3C_toolkit.svg)  
+
 针对 H3C inode 802.1x 认证服务的开发工具组
 参照了liuqun的[njit8021xclient](https://github.com/liuqun/njit8021xclient)认证客户端以及[tengattack的windows分支](https://github.com/tengattack/8021xclient-for-windows)完成开发。
 
@@ -32,9 +34,9 @@ inode客户端版本捕获及解码工具
 ## 编译&依赖
 编译环境为 Visual Studio 2013
 
-依赖 winpcap，请从官方网站下载 
+依赖 winpcap，请从官方网站下载
 
-[Winpcap二进制安装包](http://www.winpcap.org/install/default.htm) 
+[Winpcap二进制安装包](http://www.winpcap.org/install/default.htm)
 
 以及
 
