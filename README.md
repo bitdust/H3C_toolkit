@@ -31,6 +31,14 @@ inode客户端版本捕获及解码工具
 3. 编译运行dummy_H3C,选择网卡；
 4. 打开你的inode/第三方认证客户端，进行调试。
 
+## inode_version_decoder
+用于解码inode客户端版本的python脚本
+### 使用方法
+1. 安装python环境。3.5+
+2. 使用wireshark抓包inode登录过程
+3. 修改脚本中的base64_data变量值
+4. 运行脚本
+
 ## 编译&依赖
 编译环境为 Visual Studio 2013
 
